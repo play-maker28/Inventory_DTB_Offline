@@ -430,7 +430,7 @@
         <nav>
           <button id="exportBackup">⇩ &nbsp; Backup Data JSON</button
           ><button id="importBtn">⇧ &nbsp; Pulihkan Backup</button
-          ><button id="resetBtn">⟳ &nbsp; Reset Data Contoh</button
+          ><button id="resetBtn">⟳ &nbsp; Reset Data</button
           ><input
             id="importFile"
             type="file"
@@ -446,104 +446,9 @@
       server.
     </footer>
     <script>
-      const KEY = "inventori_dtb_offline_v1";
+      const KEY = "inventori_dtb_offline_v2";
       const seed = {
-        items: [
-          {
-            code: "H-001",
-            name: "Server Memory 8 GB HDD 500 GB SATA",
-            unit: "Unit",
-            min: 1,
-            note: "Perangkat IT",
-          },
-          {
-            code: "H-002",
-            name: "Layer 2 Switch 48 Port Gigabyte Ethernet",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-003",
-            name: "Layer 2 Switch 48 Port Gigabyte Ethernet",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-004",
-            name: "Firewall 4 Port",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-005",
-            name: "UPS 3000VA/2700 Rackmount",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          { code: "H-006", name: "Common Use", unit: "Unit", min: 1, note: "" },
-          {
-            code: "H-007",
-            name: "Printer Boarding Pass",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-008",
-            name: "Bagtag Printer",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-009",
-            name: "Printer Manifest",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-010",
-            name: "UPS 1500 VA",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          {
-            code: "H-014",
-            name: "Kertas Thermal",
-            unit: "Roll",
-            min: 10,
-            note: "Kebutuhan konter check-in",
-          },
-          { code: "H-017", name: "Mouse", unit: "Unit", min: 2, note: "" },
-          {
-            code: "H-026",
-            name: "Mother-Board",
-            unit: "Unit",
-            min: 1,
-            note: "",
-          },
-          { code: "H-029", name: "Keyboard", unit: "Unit", min: 2, note: "" },
-          {
-            code: "H-030",
-            name: "Pasta Processor",
-            unit: "Tube",
-            min: 2,
-            note: "",
-          },
-          {
-            code: "H-036",
-            name: "Minyak Kayu Putih",
-            unit: "Botol",
-            min: 2,
-            note: "",
-          },
-        ],
+        items: [],
         pos: [],
         moves: [],
         adjustments: [],
@@ -558,6 +463,16 @@
       function save() {
         localStorage.setItem(KEY, JSON.stringify(db));
       }
+      // Kompatibilitas data lama: tambahkan stok awal bila belum tersedia.
+      db.items = (db.items || []).map((x) => ({
+        ...x,
+        opening: num(x.opening),
+      }));
+      db.pos = db.pos || [];
+      db.moves = db.moves || [];
+      db.adjustments = db.adjustments || [];
+      db.logs = db.logs || [];
+      save();
       function esc(v) {
         return String(v ?? "").replace(
           /[&<>"']/g,
@@ -589,7 +504,7 @@
         save();
       }
       function stock(code) {
-        let opening = 0;
+        let opening = num(item(code)?.opening);
         let incoming = db.moves
           .filter((x) => x.type === "masuk" && x.code === code)
           .reduce((a, x) => a + num(x.qty), 0);
@@ -645,7 +560,7 @@
             "Ringkasan persediaan barang dan aktivitas terbaru",
           ) +
           `<div class="cards"><div class="card"><div class="label">Jenis Barang</div><div class="value">${db.items.length}</div><div class="sub">Item di master barang</div></div><div class="card"><div class="label">Total Stok</div><div class="value">${allStock()}</div><div class="sub">Akumulasi seluruh unit</div></div><div class="card"><div class="label">Transaksi Masuk</div><div class="value">${db.moves.filter((x) => x.type === "masuk").length}</div><div class="sub">Dokumen barang masuk</div></div><div class="card"><div class="label">Transaksi Keluar</div><div class="value">${db.moves.filter((x) => x.type === "keluar").length}</div><div class="sub">Dokumen barang keluar</div></div></div>
-<div class="notice">Catatan: stok awal di master dimulai dari 0. Masukkan stok melalui Barang Masuk atau Penyesuaian Stok. Data hanya tersimpan pada browser/perangkat ini.</div>
+<div class="notice">Masukkan stok awal langsung melalui Master Barang saat membuat data barang. Data tersimpan secara lokal pada browser/perangkat ini.</div>
 <div class="panel"><div class="toolbar"><h3>Stok Barang</h3><button class="btn" onclick="render('laporan')">Lihat laporan →</button></div>${table(
             [
               { label: "Kode Barang" },
@@ -682,7 +597,7 @@
             "Kelola kode, nama, satuan, dan batas minimum barang",
             '<button class="btn primary" onclick="toggleForm(\'itemForm\')">+ Tambah Barang</button>',
           ) +
-          `<div id="itemForm" class="panel formpanel hidden"><h3 id="itemFormTitle">Tambah Barang</h3><form onsubmit="saveItem(event)" id="itemFormEl"><div class="formgrid"><div class="field"><label>Kode Barang *</label><input name="code" required placeholder="Contoh: H-037"></div><div class="field"><label>Nama Barang *</label><input name="name" required placeholder="Nama barang"></div><div class="field"><label>Satuan</label><input name="unit" value="Unit" placeholder="Unit/Roll/Box"></div><div class="field"><label>Stok Minimum</label><input name="min" type="number" min="0" value="0"></div><div class="field"><label>Keterangan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('itemForm',false)">Batal</button><button class="btn primary">Simpan Barang</button></div></form></div>
+          `<div id="itemForm" class="panel formpanel hidden"><h3 id="itemFormTitle">Tambah Barang</h3><form onsubmit="saveItem(event)" id="itemFormEl"><div class="formgrid"><div class="field"><label>Kode Barang *</label><input name="code" required placeholder="Contoh: H-037"></div><div class="field"><label>Nama Barang *</label><input name="name" required placeholder="Nama barang"></div><div class="field"><label>Satuan</label><input name="unit" value="Unit" placeholder="Unit/Roll/Box"></div><div class="field"><label>Stok Awal</label><input name="opening" type="number" min="0" step="1" value="0" required></div><div class="field"><label>Stok Minimum</label><input name="min" type="number" min="0" value="0"></div><div class="field"><label>Keterangan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('itemForm',false)">Batal</button><button class="btn primary">Simpan Barang</button></div></form></div>
 <div class="panel"><div class="toolbar"><h3>Daftar Master Barang (${db.items.length})</h3><input class="search" placeholder="Cari kode atau nama..." oninput="filterTable(this,'masterTable')"></div><div id="masterTable">${table(
             [
               { label: "Kode Barang" },
@@ -696,7 +611,7 @@
             ],
             db.items.map(
               (x) =>
-                `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="num">0</td><td class="num">${db.moves.filter((y) => y.type === "masuk" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.moves.filter((y) => y.type === "keluar" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num"><b>${stock(x.code)}</b></td><td>${actionButtons("item", x.code)}</td></tr>`,
+                `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="num">${num(x.opening)}</td><td class="num">${db.moves.filter((y) => y.type === "masuk" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.moves.filter((y) => y.type === "keluar" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num"><b>${stock(x.code)}</b></td><td>${actionButtons("item", x.code)}</td></tr>`,
             ),
           )}</div></div>`;
       }
@@ -715,7 +630,7 @@
             "Catat pesanan pembelian dan pantau status penerimaan",
             '<button class="btn primary" onclick="toggleForm(\'poForm\')">+ Buat PO</button>',
           ) +
-          `<div id="poForm" class="panel formpanel hidden"><h3>Buat Purchase Order</h3><form onsubmit="savePO(event)"><div class="formgrid"><div class="field"><label>Nomor PO *</label><input name="id" required placeholder="PO-2026-001"></div><div class="field"><label>Tanggal *</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Supplier *</label><input name="supplier" required placeholder="Nama pemasok"></div><div class="field"><label>Barang *</label><select name="code" required>${itemOptions()}</select></div><div class="field"><label>Jumlah *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>Estimasi tiba</label><input name="eta" type="date"></div><div class="field"><label>Catatan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('poForm',false)">Batal</button><button class="btn primary">Simpan PO</button></div></form></div>
+          `<div id="poForm" class="panel formpanel hidden"><h3>Buat Purchase Order</h3><form onsubmit="savePO(event)"><div class="formgrid"><div class="field"><label>Nomor PO *</label><input name="id" required placeholder="PO-2026-001"></div><div class="field"><label>Tanggal *</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Supplier *</label><input name="supplier" required placeholder="Nama pemasok"></div><div class="field"><label>Barang *</label><select name="code" required>${itemOptions()}</select></div><div class="field"><label>Jumlah *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>Estimasi tiba</label><input name="eta" type="date"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('poForm',false)">Batal</button><button class="btn primary">Simpan PO</button></div></form></div>
 <div class="panel"><div class="toolbar"><h3>Daftar Purchase Order</h3><input class="search" placeholder="Cari PO, supplier, barang..." oninput="filterTable(this,'poTable')"></div><div id="poTable">${table(
             [
               { label: "No. PO" },
@@ -748,7 +663,7 @@
             `<button class="btn primary" onclick="toggleForm('${formId}')">+ Catat ${title}</button>`,
           ) +
           `<div id="${formId}" class="panel formpanel hidden"><h3>Form ${title}</h3><form onsubmit="saveMove(event,'${type}')"><div class="formgrid"><div class="field"><label>Tanggal *</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Barang *</label><select name="code" required>${itemOptions()}</select></div><div class="field"><label>Jumlah *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>${type === "masuk" ? "Asal Barang / Supplier" : "Tujuan / Pemakai"} *</label><input name="party" required placeholder="${type === "masuk" ? "Contoh: KNO / Supplier" : "Contoh: Konter check-in"}"></div><div class="field"><label>Petugas / Teknisi</label><input name="person" placeholder="Nama petugas"></div><div class="field"><label>Referensi (PO / dokumen)</label><input name="ref" placeholder="Opsional"></div><div class="field"><label>Keterangan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('${formId}',false)">Batal</button><button class="btn primary">Simpan Transaksi</button></div></form></div>
-<div class="panel"><div class="toolbar"><h3>Riwayat ${title}</h3><input class="search" placeholder="Cari barang, tanggal, petugas..." oninput="filterTable(this,'${type}Table')"></div><div id="${type}Table">${table(
+<div class="panel"><div class="toolbar"><h3>Riwayat ${title}</h3><input class="search no-print" placeholder="Cari barang, tanggal, petugas..." oninput="filterTable(this,'${type}Table')"></div><div id="${type}Table">${table(
             [
               { label: "Tanggal" },
               { label: "Kode Barang" },
@@ -794,7 +709,7 @@
       function renderReports(m) {
         let rows = db.items.map(
           (x) =>
-            `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="num">0</td><td class="num">${db.moves.filter((y) => y.type === "masuk" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.moves.filter((y) => y.type === "keluar" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.adjustments.filter((y) => y.code === x.code).reduce((a, y) => a + num(y.delta), 0)}</td><td class="num"><b>${stock(x.code)}</b></td><td>${stock(x.code) <= num(x.min) ? '<span class="pill warn">Stok rendah</span>' : '<span class="pill good">Aman</span>'}</td></tr>`,
+            `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="num">${num(x.opening)}</td><td class="num">${db.moves.filter((y) => y.type === "masuk" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.moves.filter((y) => y.type === "keluar" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.adjustments.filter((y) => y.code === x.code).reduce((a, y) => a + num(y.delta), 0)}</td><td class="num"><b>${stock(x.code)}</b></td><td>${stock(x.code) <= num(x.min) ? '<span class="pill warn">Stok rendah</span>' : '<span class="pill good">Aman</span>'}</td></tr>`,
         );
         m.innerHTML =
           pageHead(
@@ -803,6 +718,42 @@
             '<button class="btn primary no-print" onclick="window.print()">Cetak / Simpan PDF</button>',
           ) +
           `<div class="panel"><div class="toolbar"><h3>Laporan Rincian Barang</h3><input class="search no-print" placeholder="Cari kode atau nama..." oninput="filterTable(this,'reportTable')"></div><div id="reportTable">${table([{ label: "Kode Barang" }, { label: "Nama Barang" }, { label: "Satuan" }, { label: "Stok Awal", num: true }, { label: "Barang Masuk", num: true }, { label: "Barang Keluar", num: true }, { label: "Penyesuaian", num: true }, { label: "Stok Akhir", num: true }, { label: "Status" }], rows)}</div><div class="formactions no-print"><button class="btn" onclick="downloadCSV('laporan-persediaan.csv',reportCSV())">Ekspor CSV</button></div></div>
+<div class="panel"><div class="toolbar"><h3>Laporan Barang Masuk</h3><button class="btn no-print" onclick="downloadCSV('laporan-barang-masuk-${today()}.csv',moveCSV('masuk'))">Ekspor CSV</button></div>${table(
+            [
+              { label: "Tanggal" },
+              { label: "Kode Barang" },
+              { label: "Nama Barang" },
+              { label: "Jumlah", num: true },
+              { label: "Asal Barang / Supplier" },
+              { label: "Petugas" },
+              { label: "Referensi" },
+              { label: "Keterangan" },
+            ],
+            db.moves
+              .filter((x) => x.type === "masuk")
+              .map(
+                (x) =>
+                  `<tr><td>${fmtDate(x.date)}</td><td>${esc(x.code)}</td><td>${esc(item(x.code)?.name || x.code)}</td><td class="num">${num(x.qty)}</td><td>${esc(x.party || "-")}</td><td>${esc(x.person || "-")}</td><td>${esc(x.ref || "-")}</td><td>${esc(x.note || "-")}</td></tr>`,
+              ),
+          )}</div>
+<div class="panel"><div class="toolbar"><h3>Laporan Barang Keluar</h3><button class="btn no-print" onclick="downloadCSV('laporan-barang-keluar-${today()}.csv',moveCSV('keluar'))">Ekspor CSV</button></div>${table(
+            [
+              { label: "Tanggal" },
+              { label: "Kode Barang" },
+              { label: "Nama Barang" },
+              { label: "Jumlah", num: true },
+              { label: "Tujuan / Pemakai" },
+              { label: "Petugas" },
+              { label: "Referensi" },
+              { label: "Keterangan" },
+            ],
+            db.moves
+              .filter((x) => x.type === "keluar")
+              .map(
+                (x) =>
+                  `<tr><td>${fmtDate(x.date)}</td><td>${esc(x.code)}</td><td>${esc(item(x.code)?.name || x.code)}</td><td class="num">${num(x.qty)}</td><td>${esc(x.party || "-")}</td><td>${esc(x.person || "-")}</td><td>${esc(x.ref || "-")}</td><td>${esc(x.note || "-")}</td></tr>`,
+              ),
+          )}</div>
 <div class="panel"><h3>Ringkasan Transaksi</h3>${table([{ label: "Jenis" }, { label: "Jumlah Dokumen", num: true }, { label: "Total Kuantitas", num: true }], [`<tr><td>Barang Masuk</td><td class="num">${db.moves.filter((x) => x.type === "masuk").length}</td><td class="num">${db.moves.filter((x) => x.type === "masuk").reduce((a, x) => a + num(x.qty), 0)}</td></tr>`, `<tr><td>Barang Keluar</td><td class="num">${db.moves.filter((x) => x.type === "keluar").length}</td><td class="num">${db.moves.filter((x) => x.type === "keluar").reduce((a, x) => a + num(x.qty), 0)}</td></tr>`, `<tr><td>Purchase Order</td><td class="num">${db.pos.length}</td><td class="num">${db.pos.reduce((a, x) => a + num(x.qty), 0)}</td></tr>`])}</div>`;
       }
       function renderLogs(m) {
@@ -810,7 +761,6 @@
           pageHead(
             "Riwayat Aktivitas",
             "Catatan perubahan dan transaksi yang dilakukan di aplikasi",
-            '<button class="btn" onclick="downloadCSV(\'riwayat-aktivitas.csv\',logsCSV())">Ekspor CSV</button>',
           ) +
           `<div class="panel"><div class="toolbar"><h3>Log Aktivitas</h3><input class="search" placeholder="Cari aktivitas..." oninput="filterTable(this,'logsTable')"></div><div id="logsTable">${table(
             [{ label: "Waktu" }, { label: "Aktivitas" }, { label: "Detail" }],
@@ -853,6 +803,7 @@
           code,
           name: String(f.get("name")).trim(),
           unit: String(f.get("unit") || "Unit").trim(),
+          opening: num(f.get("opening")),
           min: num(f.get("min")),
           note: String(f.get("note") || ""),
         });
@@ -874,7 +825,6 @@
           code: f.get("code"),
           qty: num(f.get("qty")),
           eta: f.get("eta"),
-          note: f.get("note"),
           status: "Dipesan",
         });
         log("Buat PO", `${id} — ${f.get("supplier")}`);
@@ -966,7 +916,8 @@
         if (type === "item") {
           if (
             db.moves.some((x) => x.code === id) ||
-            db.adjustments.some((x) => x.code === id)
+            db.adjustments.some((x) => x.code === id) ||
+            db.pos.some((x) => x.code === id)
           ) {
             alert(
               "Barang sudah memiliki transaksi. Hapus transaksi terkait terlebih dahulu.",
@@ -1007,17 +958,21 @@
         return '"' + String(x ?? "").replace(/"/g, '""') + '"';
       }
       function downloadCSV(name, rows) {
-        let blob = new Blob(
-            ["\ufeff" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n")],
-            { type: "text/csv;charset=utf-8;" },
-          ),
-          a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
+        const csv = rows.map((r) => r.map(csvCell).join(",")).join("\r\n");
+        const blob = new Blob(["\ufeff" + csv], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const a = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        a.href = url;
         a.download = name;
+        document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(a.href);
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
       }
       function reportCSV() {
+        // CSV dibuat sebagai tabel murni agar baris pertama langsung menjadi header Excel.
         return [
           [
             "Kode Barang",
@@ -1034,7 +989,7 @@
             x.code,
             x.name,
             x.unit,
-            0,
+            num(x.opening),
             db.moves
               .filter((y) => y.type === "masuk" && y.code === x.code)
               .reduce((a, y) => a + num(y.qty), 0),
@@ -1058,6 +1013,71 @@
             x.detail,
           ]),
         ];
+      }
+      function moveCSV(type) {
+        const incoming = type === "masuk";
+        const rows = db.moves
+          .filter((x) => x.type === type)
+          .slice()
+          .sort((a, b) =>
+            String(a.date || "").localeCompare(String(b.date || "")),
+          );
+
+        return [
+          [
+            "No.",
+            "Tanggal",
+            "Kode Barang",
+            "Nama Barang",
+            "Jumlah",
+            "Satuan",
+            incoming ? "Asal Barang / Supplier" : "Tujuan / Pemakai",
+            "Petugas / Teknisi",
+            "Referensi Dokumen",
+            "Keterangan",
+          ],
+          ...rows.map((x, i) => [
+            i + 1,
+            fmtDate(x.date),
+            x.code,
+            item(x.code)?.name || x.code,
+            num(x.qty),
+            item(x.code)?.unit || "",
+            x.party || "",
+            x.person || "",
+            x.ref || "",
+            x.note || "",
+          ]),
+        ];
+      }
+      function printSection(tableId, title) {
+        const root = document.getElementById(tableId);
+        if (!root) return;
+        const w = window.open("", "_blank");
+        if (!w) {
+          alert(
+            "Jendela cetak diblokir browser. Izinkan pop-up untuk mencetak atau menyimpan PDF.",
+          );
+          return;
+        }
+        w.document
+          .write(`<!doctype html><html lang="id"><head><meta charset="utf-8">
+          <title>${esc(title)}</title><style>
+          body{font:12px Arial,sans-serif;color:#202938;padding:24px}
+          h1{font-size:20px;margin:0 0 6px}p{color:#687385;margin:0 0 18px}
+          table{width:100%;border-collapse:collapse;white-space:normal}
+          th,td{border:1px solid #cfd6df;padding:8px;text-align:left;vertical-align:top}
+          th{background:#eef2f6}td:nth-child(5),th:nth-child(5){text-align:right}
+          @page{size:landscape;margin:12mm}
+          </style></head><body><h1>Inventory DTB</h1>
+          <p>${esc(title)} · Dicetak ${new Date().toLocaleString("id-ID")}</p>
+          ${root.innerHTML}</body></html>`);
+        w.document.close();
+        w.focus();
+        w.onload = () => {
+          w.print();
+          w.close();
+        };
       }
       document.getElementById("nav").addEventListener("click", (e) => {
         let b = e.target.closest("button[data-page]");
@@ -1100,18 +1120,16 @@
       document.getElementById("resetBtn").onclick = () => {
         if (
           confirm(
-            "Reset semua data ke master contoh? Semua transaksi saat ini akan hilang.",
+            "Reset seluruh data aplikasi? Master barang, PO, transaksi, penyesuaian, dan riwayat aktivitas akan dikosongkan. Tindakan ini tidak dapat dibatalkan.",
           )
         ) {
           db = JSON.parse(JSON.stringify(seed));
-          log("Reset data", "Data dikembalikan ke contoh awal");
+          save();
+          log("Reset data", "Seluruh data aplikasi dikosongkan");
           render("dashboard");
         }
       };
-      if (!localStorage.getItem(KEY)) {
-        save();
-        log("Aplikasi dimulai", "Data master contoh dibuat");
-      }
+      if (!localStorage.getItem(KEY)) save();
       render("dashboard");
     </script>
   </body>
