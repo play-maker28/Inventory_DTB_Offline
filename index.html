@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sistem Inventory Offline</title>
+    <style>
+      :root {
+        --blue: #1769aa;
+        --blue2: #eaf3fb;
+        --ink: #202938;
+        --muted: #687385;
+        --line: #dbe1e8;
+        --bg: #f4f6f9;
+        --white: #fff;
+        --red: #b42318;
+        --green: #16804a;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          14px/1.45 Arial,
+          Helvetica,
+          sans-serif;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        padding: 16px 22px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .logo {
+        width: 38px;
+        height: 38px;
+        background: var(--blue);
+        color: white;
+        border-radius: 9px;
+        display: grid;
+        place-items: center;
+        font-weight: bold;
+        font-size: 20px;
+      }
+      .brand h1 {
+        font-size: 18px;
+        margin: 0;
+      }
+      .brand p {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .topnote {
+        color: var(--green);
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr);
+        min-height: calc(100vh - 70px);
+      }
+      aside {
+        background: #fff;
+        border-right: 1px solid var(--line);
+        padding: 18px 12px;
+      }
+      .navlabel {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8a94a4;
+        padding: 8px 12px;
+      }
+      nav button {
+        width: 100%;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        padding: 11px 12px;
+        border-radius: 8px;
+        margin: 2px 0;
+        color: #485365;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      nav button:hover {
+        background: #f2f6fa;
+      }
+      nav button.active {
+        background: var(--blue2);
+        color: var(--blue);
+        font-weight: bold;
+      }
+      main {
+        padding: 24px;
+        max-width: 1600px;
+        width: 100%;
+        margin: 0 auto;
+      }
+      .pagehead {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+      .pagehead h2 {
+        font-size: 24px;
+        margin: 0 0 5px;
+      }
+      .pagehead p {
+        margin: 0;
+        color: var(--muted);
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 20px;
+      }
+      .card,
+      .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 17px;
+      }
+      .card .label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .card .value {
+        font-size: 27px;
+        font-weight: bold;
+        margin-top: 7px;
+      }
+      .card .sub {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .panel {
+        margin-bottom: 16px;
+      }
+      .panel h3 {
+        font-size: 16px;
+        margin: 0 0 14px;
+      }
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      input,
+      select,
+      textarea {
+        font: inherit;
+        padding: 9px 10px;
+        border: 1px solid #cfd6df;
+        border-radius: 7px;
+        background: #fff;
+        color: var(--ink);
+        min-width: 0;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        outline: 2px solid #c5e0fa;
+        border-color: var(--blue);
+      }
+      .search {
+        min-width: 220px;
+      }
+      .btn {
+        border: 1px solid #cfd6df;
+        background: white;
+        color: #344054;
+        border-radius: 7px;
+        padding: 9px 12px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .btn:hover {
+        background: #f6f8fb;
+      }
+      .btn.primary {
+        background: var(--blue);
+        border-color: var(--blue);
+        color: white;
+      }
+      .btn.danger {
+        color: var(--red);
+        border-color: #f1c4c0;
+      }
+      .btn.small {
+        font-size: 12px;
+        padding: 5px 8px;
+      }
+      .tablewrap {
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        background: white;
+        white-space: nowrap;
+      }
+      th,
+      td {
+        padding: 10px 12px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+      th {
+        background: #f0f2f5;
+        color: #344054;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      td.num,
+      th.num {
+        text-align: right;
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 26px;
+      }
+      .formgrid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+      .field label {
+        font-size: 12px;
+        color: #566173;
+        font-weight: bold;
+      }
+      .field input,
+      .field select,
+      .field textarea {
+        width: 100%;
+      }
+      .formactions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 14px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .pill {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 20px;
+        background: #edf2f7;
+        color: #526071;
+        font-size: 11px;
+      }
+      .pill.good {
+        background: #e7f6ed;
+        color: #147544;
+      }
+      .pill.warn {
+        background: #fff4d6;
+        color: #8a5a00;
+      }
+      .notice {
+        padding: 11px 13px;
+        background: #fff8e8;
+        border: 1px solid #f2dfac;
+        border-radius: 8px;
+        color: #75520c;
+        font-size: 12px;
+        margin-bottom: 16px;
+      }
+      footer {
+        padding: 20px;
+        color: #8992a0;
+        text-align: center;
+        font-size: 12px;
+      }
+      @media (max-width: 900px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+        aside {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+          padding: 8px;
+          overflow: auto;
+        }
+        nav {
+          display: flex;
+          gap: 4px;
+          min-width: max-content;
+        }
+        nav button {
+          width: auto;
+          padding: 9px 11px;
+        }
+        .navlabel {
+          display: none;
+        }
+        main {
+          padding: 15px;
+        }
+        .cards {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .formgrid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      @media (max-width: 560px) {
+        header {
+          padding: 12px;
+        }
+        .topnote {
+          display: none;
+        }
+        .pagehead {
+          display: block;
+        }
+        .pagehead .btn {
+          margin-top: 12px;
+        }
+        .cards {
+          grid-template-columns: 1fr 1fr;
+        }
+        .card {
+          padding: 13px;
+        }
+        .card .value {
+          font-size: 22px;
+        }
+        .formgrid {
+          grid-template-columns: 1fr;
+        }
+        .search {
+          min-width: 150px;
+          width: 100%;
+        }
+      }
+      @media print {
+        header,
+        aside,
+        .no-print,
+        .formpanel,
+        footer {
+          display: none !important;
+        }
+        .layout {
+          display: block;
+        }
+        main {
+          padding: 0;
+          max-width: none;
+        }
+        .panel,
+        .card {
+          border: 0;
+        }
+        .cards {
+          grid-template-columns: repeat(4, 1fr);
+        }
+        body {
+          background: white;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <div class="logo">+</div>
+        <div>
+          <h1>Inventory DTB</h1>
+          <p>Sistem laporan rincian barang · Offline</p>
+        </div>
+      </div>
+      <div class="topnote">● Data tersimpan di perangkat ini</div>
+    </header>
+    <div class="layout">
+      <aside>
+        <div class="navlabel">Menu utama</div>
+        <nav id="nav">
+          <button class="active" data-page="dashboard">
+            ▦ &nbsp; Dashboard
+          </button>
+          <button data-page="master">▤ &nbsp; Master Barang</button>
+          <button data-page="po">▧ &nbsp; Purchase Order (PO)</button>
+          <button data-page="masuk">↓ &nbsp; Barang Masuk</button>
+          <button data-page="keluar">↑ &nbsp; Barang Keluar</button>
+          <button data-page="adjust">↔ &nbsp; Penyesuaian Stok</button>
+          <button data-page="laporan">▥ &nbsp; Laporan</button>
+          <button data-page="riwayat">◷ &nbsp; Riwayat Aktivitas</button>
+        </nav>
+        <div class="navlabel" style="margin-top: 18px">Data</div>
+        <nav>
+          <button id="exportBackup">⇩ &nbsp; Backup Data JSON</button
+          ><button id="importBtn">⇧ &nbsp; Pulihkan Backup</button
+          ><button id="resetBtn">⟳ &nbsp; Reset Data Contoh</button
+          ><input
+            id="importFile"
+            type="file"
+            accept=".json,application/json"
+            class="hidden"
+          />
+        </nav>
+      </aside>
+      <main id="main"></main>
+    </div>
+    <footer>
+      Inventori DTB · Berjalan lokal di browser, tidak membutuhkan internet atau
+      server.
+    </footer>
+    <script>
+      const KEY = "inventori_dtb_offline_v1";
+      const seed = {
+        items: [
+          {
+            code: "H-001",
+            name: "Server Memory 8 GB HDD 500 GB SATA",
+            unit: "Unit",
+            min: 1,
+            note: "Perangkat IT",
+          },
+          {
+            code: "H-002",
+            name: "Layer 2 Switch 48 Port Gigabyte Ethernet",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-003",
+            name: "Layer 2 Switch 48 Port Gigabyte Ethernet",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-004",
+            name: "Firewall 4 Port",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-005",
+            name: "UPS 3000VA/2700 Rackmount",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          { code: "H-006", name: "Common Use", unit: "Unit", min: 1, note: "" },
+          {
+            code: "H-007",
+            name: "Printer Boarding Pass",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-008",
+            name: "Bagtag Printer",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-009",
+            name: "Printer Manifest",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-010",
+            name: "UPS 1500 VA",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          {
+            code: "H-014",
+            name: "Kertas Thermal",
+            unit: "Roll",
+            min: 10,
+            note: "Kebutuhan konter check-in",
+          },
+          { code: "H-017", name: "Mouse", unit: "Unit", min: 2, note: "" },
+          {
+            code: "H-026",
+            name: "Mother-Board",
+            unit: "Unit",
+            min: 1,
+            note: "",
+          },
+          { code: "H-029", name: "Keyboard", unit: "Unit", min: 2, note: "" },
+          {
+            code: "H-030",
+            name: "Pasta Processor",
+            unit: "Tube",
+            min: 2,
+            note: "",
+          },
+          {
+            code: "H-036",
+            name: "Minyak Kayu Putih",
+            unit: "Botol",
+            min: 2,
+            note: "",
+          },
+        ],
+        pos: [],
+        moves: [],
+        adjustments: [],
+        logs: [],
+      };
+      let db;
+      try {
+        db = JSON.parse(localStorage.getItem(KEY)) || structuredClone(seed);
+      } catch (e) {
+        db = JSON.parse(JSON.stringify(seed));
+      }
+      function save() {
+        localStorage.setItem(KEY, JSON.stringify(db));
+      }
+      function esc(v) {
+        return String(v ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      function today() {
+        let d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      }
+      function fmtDate(s) {
+        if (!s) return "-";
+        let d = new Date(s + "T00:00:00");
+        return isNaN(d) ? s : d.toLocaleDateString("id-ID");
+      }
+      function num(v) {
+        return Number(v) || 0;
+      }
+      function log(action, detail) {
+        db.logs.unshift({ date: new Date().toISOString(), action, detail });
+        db.logs = db.logs.slice(0, 500);
+        save();
+      }
+      function stock(code) {
+        let opening = 0;
+        let incoming = db.moves
+          .filter((x) => x.type === "masuk" && x.code === code)
+          .reduce((a, x) => a + num(x.qty), 0);
+        let outgoing = db.moves
+          .filter((x) => x.type === "keluar" && x.code === code)
+          .reduce((a, x) => a + num(x.qty), 0);
+        let adj = db.adjustments
+          .filter((x) => x.code === code)
+          .reduce((a, x) => a + num(x.delta), 0);
+        return opening + incoming - outgoing + adj;
+      }
+      function item(code) {
+        return db.items.find((x) => x.code === code);
+      }
+      function allStock() {
+        return db.items.reduce((a, x) => a + stock(x.code), 0);
+      }
+      function pageHead(title, desc, button = "") {
+        return `<div class="pagehead"><div><h2>${title}</h2><p>${desc}</p></div>${button}</div>`;
+      }
+      function table(headers, rows, empty = "Belum ada data.") {
+        return `<div class="tablewrap"><table><thead><tr>${headers.map((h) => `<th class="${h.num ? "num" : ""}">${h.label || h}</th>`).join("")}</tr></thead><tbody>${rows.length ? rows.join("") : `<tr><td colspan="${headers.length}" class="empty">${empty}</td></tr>`}</tbody></table></div>`;
+      }
+      function actionButtons(type, id) {
+        return `<button class="btn small danger" onclick="delRecord('${type}','${esc(id)}')">Hapus</button>`;
+      }
+      function render(page = "dashboard") {
+        window.currentPage = page;
+        document
+          .querySelectorAll("#nav button[data-page]")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.page === page),
+          );
+        let main = document.getElementById("main");
+        (
+          ({
+            dashboard: renderDashboard,
+            master: renderMaster,
+            po: renderPO,
+            masuk: () => renderMoves("masuk"),
+            keluar: () => renderMoves("keluar"),
+            adjust: renderAdjust,
+            laporan: renderReports,
+            riwayat: renderLogs,
+          })[page] || renderDashboard
+        )(main);
+      }
+      function renderDashboard(m) {
+        let low = db.items.filter((x) => stock(x.code) <= num(x.min));
+        m.innerHTML =
+          pageHead(
+            "Dashboard",
+            "Ringkasan persediaan barang dan aktivitas terbaru",
+          ) +
+          `<div class="cards"><div class="card"><div class="label">Jenis Barang</div><div class="value">${db.items.length}</div><div class="sub">Item di master barang</div></div><div class="card"><div class="label">Total Stok</div><div class="value">${allStock()}</div><div class="sub">Akumulasi seluruh unit</div></div><div class="card"><div class="label">Transaksi Masuk</div><div class="value">${db.moves.filter((x) => x.type === "masuk").length}</div><div class="sub">Dokumen barang masuk</div></div><div class="card"><div class="label">Transaksi Keluar</div><div class="value">${db.moves.filter((x) => x.type === "keluar").length}</div><div class="sub">Dokumen barang keluar</div></div></div>
+<div class="notice">Catatan: stok awal di master dimulai dari 0. Masukkan stok melalui Barang Masuk atau Penyesuaian Stok. Data hanya tersimpan pada browser/perangkat ini.</div>
+<div class="panel"><div class="toolbar"><h3>Stok Barang</h3><button class="btn" onclick="render('laporan')">Lihat laporan →</button></div>${table(
+            [
+              { label: "Kode Barang" },
+              { label: "Nama Barang" },
+              { label: "Stok Akhir", num: true },
+              { label: "Stok Minimum", num: true },
+              { label: "Status" },
+            ],
+            db.items
+              .slice(0, 12)
+              .map(
+                (x) =>
+                  `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td class="num">${stock(x.code)} ${esc(x.unit)}</td><td class="num">${num(x.min)}</td><td>${stock(x.code) <= num(x.min) ? '<span class="pill warn">Stok rendah</span>' : '<span class="pill good">Aman</span>'}</td></tr>`,
+              ),
+          )}</div>
+<div class="panel"><h3>Aktivitas Terbaru</h3>${table(
+            [
+              { label: "Waktu" },
+              { label: "Aktivitas" },
+              { label: "Keterangan" },
+            ],
+            db.logs
+              .slice(0, 5)
+              .map(
+                (x) =>
+                  `<tr><td>${new Date(x.date).toLocaleString("id-ID")}</td><td>${esc(x.action)}</td><td>${esc(x.detail)}</td></tr>`,
+              ),
+          )}</div>`;
+      }
+      function renderMaster(m) {
+        m.innerHTML =
+          pageHead(
+            "Master Barang",
+            "Kelola kode, nama, satuan, dan batas minimum barang",
+            '<button class="btn primary" onclick="toggleForm(\'itemForm\')">+ Tambah Barang</button>',
+          ) +
+          `<div id="itemForm" class="panel formpanel hidden"><h3 id="itemFormTitle">Tambah Barang</h3><form onsubmit="saveItem(event)" id="itemFormEl"><div class="formgrid"><div class="field"><label>Kode Barang *</label><input name="code" required placeholder="Contoh: H-037"></div><div class="field"><label>Nama Barang *</label><input name="name" required placeholder="Nama barang"></div><div class="field"><label>Satuan</label><input name="unit" value="Unit" placeholder="Unit/Roll/Box"></div><div class="field"><label>Stok Minimum</label><input name="min" type="number" min="0" value="0"></div><div class="field"><label>Keterangan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('itemForm',false)">Batal</button><button class="btn primary">Simpan Barang</button></div></form></div>
+<div class="panel"><div class="toolbar"><h3>Daftar Master Barang (${db.items.length})</h3><input class="search" placeholder="Cari kode atau nama..." oninput="filterTable(this,'masterTable')"></div><div id="masterTable">${table(
+            [
+              { label: "Kode Barang" },
+              { label: "Nama Barang" },
+              { label: "Satuan" },
+              { label: "Stok Awal", num: true },
+              { label: "Stok Masuk", num: true },
+              { label: "Stok Keluar", num: true },
+              { label: "Stok Akhir", num: true },
+              { label: "Aksi" },
+            ],
+            db.items.map(
+              (x) =>
+                `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="num">0</td><td class="num">${db.moves.filter((y) => y.type === "masuk" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.moves.filter((y) => y.type === "keluar" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num"><b>${stock(x.code)}</b></td><td>${actionButtons("item", x.code)}</td></tr>`,
+            ),
+          )}</div></div>`;
+      }
+      function itemOptions() {
+        return db.items
+          .map(
+            (x) =>
+              `<option value="${esc(x.code)}">${esc(x.code)} — ${esc(x.name)}</option>`,
+          )
+          .join("");
+      }
+      function renderPO(m) {
+        m.innerHTML =
+          pageHead(
+            "Purchase Order (PO)",
+            "Catat pesanan pembelian dan pantau status penerimaan",
+            '<button class="btn primary" onclick="toggleForm(\'poForm\')">+ Buat PO</button>',
+          ) +
+          `<div id="poForm" class="panel formpanel hidden"><h3>Buat Purchase Order</h3><form onsubmit="savePO(event)"><div class="formgrid"><div class="field"><label>Nomor PO *</label><input name="id" required placeholder="PO-2026-001"></div><div class="field"><label>Tanggal *</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Supplier *</label><input name="supplier" required placeholder="Nama pemasok"></div><div class="field"><label>Barang *</label><select name="code" required>${itemOptions()}</select></div><div class="field"><label>Jumlah *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>Estimasi tiba</label><input name="eta" type="date"></div><div class="field"><label>Catatan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('poForm',false)">Batal</button><button class="btn primary">Simpan PO</button></div></form></div>
+<div class="panel"><div class="toolbar"><h3>Daftar Purchase Order</h3><input class="search" placeholder="Cari PO, supplier, barang..." oninput="filterTable(this,'poTable')"></div><div id="poTable">${table(
+            [
+              { label: "No. PO" },
+              { label: "Tanggal" },
+              { label: "Supplier" },
+              { label: "Barang" },
+              { label: "Jumlah", num: true },
+              { label: "Estimasi Tiba" },
+              { label: "Status" },
+              { label: "Aksi" },
+            ],
+            db.pos.map(
+              (x) =>
+                `<tr><td>${esc(x.id)}</td><td>${fmtDate(x.date)}</td><td>${esc(x.supplier)}</td><td>${esc(item(x.code)?.name || x.code)}</td><td class="num">${x.qty}</td><td>${fmtDate(x.eta)}</td><td><span class="pill ${x.status === "Diterima" ? "good" : "warn"}">${esc(x.status)}</span> <button class="btn small" onclick="receivePO('${esc(x.id)}')">Tandai diterima</button></td><td>${actionButtons("po", x.id)}</td></tr>`,
+            ),
+          )}</div></div>`;
+      }
+      function renderMoves(type) {
+        let title = type === "masuk" ? "Barang Masuk" : "Barang Keluar",
+          desc =
+            type === "masuk"
+              ? "Catat penerimaan barang dari supplier atau sumber lain."
+              : "Catat pengeluaran barang untuk pemakaian atau tujuan tertentu.";
+        let formId = type + "Form";
+        m = document.getElementById("main");
+        m.innerHTML =
+          pageHead(
+            title,
+            desc,
+            `<button class="btn primary" onclick="toggleForm('${formId}')">+ Catat ${title}</button>`,
+          ) +
+          `<div id="${formId}" class="panel formpanel hidden"><h3>Form ${title}</h3><form onsubmit="saveMove(event,'${type}')"><div class="formgrid"><div class="field"><label>Tanggal *</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Barang *</label><select name="code" required>${itemOptions()}</select></div><div class="field"><label>Jumlah *</label><input name="qty" type="number" min="1" required></div><div class="field"><label>${type === "masuk" ? "Asal Barang / Supplier" : "Tujuan / Pemakai"} *</label><input name="party" required placeholder="${type === "masuk" ? "Contoh: KNO / Supplier" : "Contoh: Konter check-in"}"></div><div class="field"><label>Petugas / Teknisi</label><input name="person" placeholder="Nama petugas"></div><div class="field"><label>Referensi (PO / dokumen)</label><input name="ref" placeholder="Opsional"></div><div class="field"><label>Keterangan</label><input name="note" placeholder="Opsional"></div></div><div class="formactions"><button type="button" class="btn" onclick="toggleForm('${formId}',false)">Batal</button><button class="btn primary">Simpan Transaksi</button></div></form></div>
+<div class="panel"><div class="toolbar"><h3>Riwayat ${title}</h3><input class="search" placeholder="Cari barang, tanggal, petugas..." oninput="filterTable(this,'${type}Table')"></div><div id="${type}Table">${table(
+            [
+              { label: "Tanggal" },
+              { label: "Kode Barang" },
+              { label: "Nama Barang" },
+              { label: "Jumlah", num: true },
+              { label: type === "masuk" ? "Asal Barang" : "Tujuan" },
+              { label: "Petugas" },
+              { label: "Referensi" },
+              { label: "Keterangan" },
+              { label: "Aksi" },
+            ],
+            db.moves
+              .filter((x) => x.type === type)
+              .map(
+                (x) =>
+                  `<tr><td>${fmtDate(x.date)}</td><td>${esc(x.code)}</td><td>${esc(item(x.code)?.name || x.code)}</td><td class="num">${x.qty}</td><td>${esc(x.party)}</td><td>${esc(x.person || "-")}</td><td>${esc(x.ref || "-")}</td><td>${esc(x.note || "-")}</td><td>${actionButtons("move", x.id)}</td></tr>`,
+              ),
+          )}</div></div>`;
+      }
+      function renderAdjust(m) {
+        m.innerHTML =
+          pageHead(
+            "Penyesuaian Stok",
+            "Koreksi stok hasil opname; jumlah bisa menambah atau mengurangi stok.",
+          ) +
+          `<div class="panel"><h3>Catat Penyesuaian</h3><form onsubmit="saveAdjust(event)"><div class="formgrid"><div class="field"><label>Tanggal *</label><input name="date" type="date" value="${today()}" required></div><div class="field"><label>Barang *</label><select name="code" required>${itemOptions()}</select></div><div class="field"><label>Perubahan Stok *</label><input name="delta" type="number" required placeholder="Contoh: 3 atau -2"><small style="color:#687385">Positif untuk menambah, negatif untuk mengurangi.</small></div><div class="field"><label>Alasan *</label><input name="reason" required placeholder="Hasil stok opname, barang rusak..."></div><div class="field"><label>Petugas</label><input name="person" placeholder="Nama petugas"></div></div><div class="formactions"><button class="btn primary">Simpan Penyesuaian</button></div></form></div>
+<div class="panel"><h3>Riwayat Penyesuaian</h3>${table(
+            [
+              { label: "Tanggal" },
+              { label: "Kode" },
+              { label: "Nama Barang" },
+              { label: "Perubahan", num: true },
+              { label: "Alasan" },
+              { label: "Petugas" },
+              { label: "Aksi" },
+            ],
+            db.adjustments.map(
+              (x) =>
+                `<tr><td>${fmtDate(x.date)}</td><td>${esc(x.code)}</td><td>${esc(item(x.code)?.name || x.code)}</td><td class="num">${x.delta > 0 ? "+" : ""}${x.delta}</td><td>${esc(x.reason)}</td><td>${esc(x.person || "-")}</td><td>${actionButtons("adjust", x.id)}</td></tr>`,
+            ),
+          )}</div>`;
+      }
+      function renderReports(m) {
+        let rows = db.items.map(
+          (x) =>
+            `<tr><td>${esc(x.code)}</td><td>${esc(x.name)}</td><td>${esc(x.unit)}</td><td class="num">0</td><td class="num">${db.moves.filter((y) => y.type === "masuk" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.moves.filter((y) => y.type === "keluar" && y.code === x.code).reduce((a, y) => a + num(y.qty), 0)}</td><td class="num">${db.adjustments.filter((y) => y.code === x.code).reduce((a, y) => a + num(y.delta), 0)}</td><td class="num"><b>${stock(x.code)}</b></td><td>${stock(x.code) <= num(x.min) ? '<span class="pill warn">Stok rendah</span>' : '<span class="pill good">Aman</span>'}</td></tr>`,
+        );
+        m.innerHTML =
+          pageHead(
+            "Laporan Persediaan",
+            "Laporan rincian master, barang masuk, barang keluar, dan stok akhir",
+            '<button class="btn primary no-print" onclick="window.print()">Cetak / Simpan PDF</button>',
+          ) +
+          `<div class="panel"><div class="toolbar"><h3>Laporan Rincian Barang</h3><input class="search no-print" placeholder="Cari kode atau nama..." oninput="filterTable(this,'reportTable')"></div><div id="reportTable">${table([{ label: "Kode Barang" }, { label: "Nama Barang" }, { label: "Satuan" }, { label: "Stok Awal", num: true }, { label: "Barang Masuk", num: true }, { label: "Barang Keluar", num: true }, { label: "Penyesuaian", num: true }, { label: "Stok Akhir", num: true }, { label: "Status" }], rows)}</div><div class="formactions no-print"><button class="btn" onclick="downloadCSV('laporan-persediaan.csv',reportCSV())">Ekspor CSV</button></div></div>
+<div class="panel"><h3>Ringkasan Transaksi</h3>${table([{ label: "Jenis" }, { label: "Jumlah Dokumen", num: true }, { label: "Total Kuantitas", num: true }], [`<tr><td>Barang Masuk</td><td class="num">${db.moves.filter((x) => x.type === "masuk").length}</td><td class="num">${db.moves.filter((x) => x.type === "masuk").reduce((a, x) => a + num(x.qty), 0)}</td></tr>`, `<tr><td>Barang Keluar</td><td class="num">${db.moves.filter((x) => x.type === "keluar").length}</td><td class="num">${db.moves.filter((x) => x.type === "keluar").reduce((a, x) => a + num(x.qty), 0)}</td></tr>`, `<tr><td>Purchase Order</td><td class="num">${db.pos.length}</td><td class="num">${db.pos.reduce((a, x) => a + num(x.qty), 0)}</td></tr>`])}</div>`;
+      }
+      function renderLogs(m) {
+        m.innerHTML =
+          pageHead(
+            "Riwayat Aktivitas",
+            "Catatan perubahan dan transaksi yang dilakukan di aplikasi",
+            '<button class="btn" onclick="downloadCSV(\'riwayat-aktivitas.csv\',logsCSV())">Ekspor CSV</button>',
+          ) +
+          `<div class="panel"><div class="toolbar"><h3>Log Aktivitas</h3><input class="search" placeholder="Cari aktivitas..." oninput="filterTable(this,'logsTable')"></div><div id="logsTable">${table(
+            [{ label: "Waktu" }, { label: "Aktivitas" }, { label: "Detail" }],
+            db.logs.map(
+              (x) =>
+                `<tr><td>${new Date(x.date).toLocaleString("id-ID")}</td><td>${esc(x.action)}</td><td>${esc(x.detail)}</td></tr>`,
+            ),
+          )}</div></div>`;
+      }
+      function toggleForm(id, show) {
+        let el = document.getElementById(id);
+        if (el)
+          el.classList.toggle(
+            "hidden",
+            show === undefined ? !el.classList.contains("hidden") : !show,
+          );
+      }
+      function filterTable(input, id) {
+        let q = input.value.toLowerCase();
+        let root = document.getElementById(id);
+        if (!root) return;
+        root
+          .querySelectorAll("tbody tr")
+          .forEach(
+            (tr) =>
+              (tr.style.display = tr.innerText.toLowerCase().includes(q)
+                ? ""
+                : "none"),
+          );
+      }
+      function saveItem(e) {
+        e.preventDefault();
+        let f = new FormData(e.target),
+          code = String(f.get("code")).trim().toUpperCase();
+        if (db.items.some((x) => x.code === code)) {
+          alert("Kode barang sudah digunakan.");
+          return;
+        }
+        db.items.push({
+          code,
+          name: String(f.get("name")).trim(),
+          unit: String(f.get("unit") || "Unit").trim(),
+          min: num(f.get("min")),
+          note: String(f.get("note") || ""),
+        });
+        log("Tambah master barang", `${code} — ${f.get("name")}`);
+        render("master");
+      }
+      function savePO(e) {
+        e.preventDefault();
+        let f = new FormData(e.target),
+          id = String(f.get("id")).trim().toUpperCase();
+        if (db.pos.some((x) => x.id === id)) {
+          alert("Nomor PO sudah digunakan.");
+          return;
+        }
+        db.pos.unshift({
+          id,
+          date: f.get("date"),
+          supplier: f.get("supplier"),
+          code: f.get("code"),
+          qty: num(f.get("qty")),
+          eta: f.get("eta"),
+          note: f.get("note"),
+          status: "Dipesan",
+        });
+        log("Buat PO", `${id} — ${f.get("supplier")}`);
+        render("po");
+      }
+      function receivePO(id) {
+        let p = db.pos.find((x) => x.id === id);
+        if (!p || p.status === "Diterima") {
+          alert("PO ini sudah diterima atau tidak ditemukan.");
+          return;
+        }
+        if (
+          !confirm(
+            `Tandai ${id} diterima dan tambahkan ${p.qty} ${item(p.code)?.unit || ""} ke Barang Masuk?`,
+          )
+        )
+          return;
+        p.status = "Diterima";
+        db.moves.unshift({
+          id: crypto.randomUUID(),
+          type: "masuk",
+          date: today(),
+          code: p.code,
+          qty: p.qty,
+          party: p.supplier,
+          person: "",
+          ref: p.id,
+          note: "Penerimaan dari PO",
+        });
+        log("Terima PO", `${id}; ${p.code} +${p.qty}`);
+        render("po");
+      }
+      function saveMove(e, type) {
+        e.preventDefault();
+        let f = new FormData(e.target),
+          code = f.get("code"),
+          qty = num(f.get("qty"));
+        if (type === "keluar" && qty > stock(code)) {
+          alert(`Stok tidak cukup. Stok tersedia: ${stock(code)}.`);
+          return;
+        }
+        db.moves.unshift({
+          id: crypto.randomUUID(),
+          type,
+          date: f.get("date"),
+          code,
+          qty,
+          party: f.get("party"),
+          person: f.get("person"),
+          ref: f.get("ref"),
+          note: f.get("note"),
+        });
+        log(
+          type === "masuk" ? "Barang masuk" : "Barang keluar",
+          `${code} ${type === "masuk" ? "+" : "-"}${qty}; ${f.get("party")}`,
+        );
+        render(type);
+      }
+      function saveAdjust(e) {
+        e.preventDefault();
+        let f = new FormData(e.target),
+          code = f.get("code"),
+          delta = num(f.get("delta"));
+        if (delta === 0) {
+          alert("Perubahan stok tidak boleh 0.");
+          return;
+        }
+        if (stock(code) + delta < 0) {
+          alert(`Stok tidak mencukupi. Stok saat ini: ${stock(code)}.`);
+          return;
+        }
+        db.adjustments.unshift({
+          id: crypto.randomUUID(),
+          date: f.get("date"),
+          code,
+          delta,
+          reason: f.get("reason"),
+          person: f.get("person"),
+        });
+        log(
+          "Penyesuaian stok",
+          `${code} ${delta > 0 ? "+" : ""}${delta}; ${f.get("reason")}`,
+        );
+        render("adjust");
+      }
+      function delRecord(type, id) {
+        if (!confirm("Hapus data ini? Tindakan ini tidak dapat dibatalkan."))
+          return;
+        if (type === "item") {
+          if (
+            db.moves.some((x) => x.code === id) ||
+            db.adjustments.some((x) => x.code === id)
+          ) {
+            alert(
+              "Barang sudah memiliki transaksi. Hapus transaksi terkait terlebih dahulu.",
+            );
+            return;
+          }
+          db.items = db.items.filter((x) => x.code !== id);
+          log("Hapus master barang", id);
+          render("master");
+          return;
+        }
+        if (type === "po") {
+          db.pos = db.pos.filter((x) => x.id !== id);
+          log("Hapus PO", id);
+          render("po");
+          return;
+        }
+        if (type === "move") {
+          let x = db.moves.find((x) => x.id === id);
+          if (x && x.type === "masuk" && stock(x.code) - x.qty < 0) {
+            alert(
+              "Tidak dapat menghapus transaksi karena stok akan menjadi negatif.",
+            );
+            return;
+          }
+          db.moves = db.moves.filter((x) => x.id !== id);
+          log("Hapus transaksi", id);
+          render(currentPage);
+          return;
+        }
+        if (type === "adjust") {
+          db.adjustments = db.adjustments.filter((x) => x.id !== id);
+          log("Hapus penyesuaian", id);
+          render("adjust");
+        }
+      }
+      function csvCell(x) {
+        return '"' + String(x ?? "").replace(/"/g, '""') + '"';
+      }
+      function downloadCSV(name, rows) {
+        let blob = new Blob(
+            ["\ufeff" + rows.map((r) => r.map(csvCell).join(";")).join("\r\n")],
+            { type: "text/csv;charset=utf-8;" },
+          ),
+          a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      }
+      function reportCSV() {
+        return [
+          [
+            "Kode Barang",
+            "Nama Barang",
+            "Satuan",
+            "Stok Awal",
+            "Barang Masuk",
+            "Barang Keluar",
+            "Penyesuaian",
+            "Stok Akhir",
+            "Status",
+          ],
+          ...db.items.map((x) => [
+            x.code,
+            x.name,
+            x.unit,
+            0,
+            db.moves
+              .filter((y) => y.type === "masuk" && y.code === x.code)
+              .reduce((a, y) => a + num(y.qty), 0),
+            db.moves
+              .filter((y) => y.type === "keluar" && y.code === x.code)
+              .reduce((a, y) => a + num(y.qty), 0),
+            db.adjustments
+              .filter((y) => y.code === x.code)
+              .reduce((a, y) => a + num(y.delta), 0),
+            stock(x.code),
+            stock(x.code) <= num(x.min) ? "Stok rendah" : "Aman",
+          ]),
+        ];
+      }
+      function logsCSV() {
+        return [
+          ["Waktu", "Aktivitas", "Detail"],
+          ...db.logs.map((x) => [
+            new Date(x.date).toLocaleString("id-ID"),
+            x.action,
+            x.detail,
+          ]),
+        ];
+      }
+      document.getElementById("nav").addEventListener("click", (e) => {
+        let b = e.target.closest("button[data-page]");
+        if (b) render(b.dataset.page);
+      });
+      document.getElementById("exportBackup").onclick = () => {
+        let blob = new Blob([JSON.stringify(db, null, 2)], {
+            type: "application/json",
+          }),
+          a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "backup-inventori-dtb-" + today() + ".json";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+      document.getElementById("importBtn").onclick = () =>
+        document.getElementById("importFile").click();
+      document.getElementById("importFile").onchange = async (e) => {
+        let file = e.target.files[0];
+        if (!file) return;
+        try {
+          let next = JSON.parse(await file.text());
+          if (!next.items || !next.moves || !next.logs)
+            throw Error("Format backup tidak sesuai");
+          if (
+            confirm(
+              "Pulihkan backup akan mengganti semua data saat ini. Lanjutkan?",
+            )
+          ) {
+            db = next;
+            save();
+            render("dashboard");
+            alert("Backup berhasil dipulihkan.");
+          }
+        } catch (err) {
+          alert("File backup tidak valid.");
+        }
+        e.target.value = "";
+      };
+      document.getElementById("resetBtn").onclick = () => {
+        if (
+          confirm(
+            "Reset semua data ke master contoh? Semua transaksi saat ini akan hilang.",
+          )
+        ) {
+          db = JSON.parse(JSON.stringify(seed));
+          log("Reset data", "Data dikembalikan ke contoh awal");
+          render("dashboard");
+        }
+      };
+      if (!localStorage.getItem(KEY)) {
+        save();
+        log("Aplikasi dimulai", "Data master contoh dibuat");
+      }
+      render("dashboard");
+    </script>
+  </body>
+</html>
